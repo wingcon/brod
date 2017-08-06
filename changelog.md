@@ -6,3 +6,4 @@
         SASL-PLAIN username password in text file
         Hide SASL-PLAIN password in an anonymous function in `brod_client` state
 * 2.5.1_wingcon Make group coordinator restart on heartbeat timeout
+        Fix ignored commit history when committed offset is 0 (bug)
