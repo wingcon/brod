@@ -328,9 +328,10 @@ handle_info(?LO_CMD_SEND_HB,
           %% keep waiting for heartbeat response
           {noreply, State};
         false ->
-          %% time to re-discover a new coordinator ?
-          {ok, NewState} = stabilize(State, 0, hb_timeout),
-          {noreply, NewState}
+          %% Recovery from heartbeat timeout
+          %% does not work as expected
+          %% restart socket instead
+          {stop, hb_timeout, State}
       end
   end;
 handle_info({msg, _Pid, HbCorrId, #kpro_HeartbeatResponse{errorCode = EC}},
@@ -597,6 +598,7 @@ merge_acked_offsets(AckedOffsets, OffsetsToAck) ->
   lists:ukeymerge(1, OffsetsToAck, AckedOffsets).
 
 -spec format_assignments(brod_received_assignments()) -> iodata().
+format_assignments([]) -> "[]";
 format_assignments(Assignments) ->
   Groupped =
     lists:foldl(
@@ -608,7 +610,7 @@ format_assignments(Assignments) ->
       end, [], Assignments),
   lists:map(
     fun({Topic, Partitions}) ->
-      ["\n", Topic, ":", format_partition_assignments(Partitions) ]
+      ["\n  ", Topic, ":", format_partition_assignments(Partitions) ]
     end, Groupped).
 
 -spec format_partition_assignments([{partition(), offset()}]) -> iodata().
